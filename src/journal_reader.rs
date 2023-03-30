@@ -43,7 +43,7 @@ impl JournalReader {
                             //{ "timestamp":"2022-11-29T21:09:30Z", "event":"CarrierJumpRequest", "CarrierID":3704402432, "SystemName":"Ngorowai", "Body":"Ngorowai A", "SystemAddress":4207155286722, "BodyID":1, "DepartureTime":"2022-11-29T21:24:40Z" }
                             "CarrierJumpRequest" => {
                                 println!("CarrierJumpRequest: {}",line);
-                                let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody:{}\nDeparture:{}",json["SystemName"],json["Body"],json["DepartureTime"]);
+                                let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody: {}\nDeparture: {}",json["SystemName"],json["Body"],json["DepartureTime"]);
                                 self.discord.send_message(self.channel,text.as_str(),"",false).unwrap();
                             }
                             "CarrierTradeOrder" => {}
