@@ -21,14 +21,14 @@ It is extremely recommended to use the <a href=https://github.com/rfvgyhn/min-ed
 Go into following file after running elite once with the min-ed-launcher:
 ```nano ~/.config/min-ed-launcher/settings.json```
 
-Add the bot as process:
+Add the bot as process (here a linux example):
 ```
 "processes": [
 	{
-      	  "fileName": "PATH_TO_GIT_REPO/carrier_log_bot/start",
+      	  "fileName": "PATH_TO_GIT_REPO/carrier_log_bot/start.sh",
       	  "arguments": ""
 	}
     ],
 ```
 
-Now it should start along with Elite. If it works the bot should be online in discord.
+Now it should start along with Elite. If it works the bot should be online in discord. Please note that the start scripts waits 60 seconds, so you can log in and that the journal log for the session is being created when the bot starts. Otherwise, it will choose an old log and false information will be printed into the channel.

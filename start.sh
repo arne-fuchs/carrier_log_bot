@@ -2,5 +2,5 @@
 # shellcheck disable=SC2164
 cd "$(dirname "$0")"
 # Sleep to wait until elite starts
-sleep 10
+sleep 60
 cargo run
