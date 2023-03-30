@@ -12,10 +12,8 @@ fn main() {
     let (mut connection, _) = discord.connect().expect("Connect failed");
     let channel = ChannelId(std::env::var("CHANNEL_ID").unwrap().parse().unwrap());
     let mut journal_reader = journal_reader::initialize(std::env::var("JOURNAL_PATH").unwrap(),discord,channel);
-    let timeout: u64 = std::env::var("TIMEOUT").unwrap().parse().unwrap();
     println!("Ready");
     loop {
         journal_reader.run();
-        sleep(Duration::from_millis(timeout));
     }
 }
