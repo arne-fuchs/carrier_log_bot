@@ -1,65 +1,74 @@
+use std::fmt::format;
 use std::fs;
 use std::fs::{DirEntry, File};
 use std::io::{BufRead, BufReader};
-use bus::{Bus};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
+use discord::Discord;
+use discord::model::ChannelId;
 use json::JsonValue;
-use log::{debug, error};
-use crate::app::settings::Settings;
 
 pub struct JournalReader{
     pub reader: BufReader<File>,
-    index: usize,
     directory_path: String,
+    discord: Discord,
+    channel: ChannelId
 }
 
-pub fn initialize(settings: &Settings) -> JournalReader{
-    let directory_path = settings.journal_directory.clone();
+pub fn initialize(directory_path: String,discord: Discord, channel: ChannelId) -> JournalReader{
     let reader = get_journal_log_by_index(directory_path.clone(),0);
     JournalReader{
         reader,
-        index: 0,
         directory_path,
+        discord,
+        channel
     }
 }
 
 impl JournalReader {
 
-    pub fn run(&mut self, journal_bus: &mut Bus<JsonValue>){
+    pub fn run(&mut self){
         let mut line = String::new();
 
         match self.reader.read_line(&mut line) {
             Ok(flag) => {
                 if flag == 0 {
-                    //TODO Detect when file is ending ( has to detect "crashes" ) 
                     //Reached EOF -> does not mean new data wont come in
-                    //debug!("\n\nReached EOF -> increasing index and reading older journals\n");
-                    //self.index = self.index + 1;
-                    //self.reader = get_journal_log_by_index(self.directory_path.clone(),self.index.clone())
                 }else {
                     if !line.eq("") {
+                        //TODO Here logic what do write to discord
                         let json = json::parse(&line).unwrap();
                         let event = json["event"].as_str().unwrap();
-                        if event == "Shutdown" {
-                            debug!("\n\nReached Shutdown -> increasing index and reading older journals\n");
-                            self.index = self.index + 1;
-                            self.reader = get_journal_log_by_index(self.directory_path.clone(),self.index.clone())
+                        match event {
+                            "CarrierStats" => {}
+                            //{ "timestamp":"2022-11-29T21:09:30Z", "event":"CarrierJumpRequest", "CarrierID":3704402432, "SystemName":"Ngorowai", "Body":"Ngorowai A", "SystemAddress":4207155286722, "BodyID":1, "DepartureTime":"2022-11-29T21:24:40Z" }
+                            "CarrierJumpRequest" => {
+                                let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody:{}\nDeparture:{}",json["SystemName"],json["Body"],json["DepartureTime"]);
+                                self.discord.send_message(self.channel,text.as_str(),"",false).unwrap();
+                            }
+                            "CarrierTradeOrder" => {}
+                            "CarrierFinance" => {}
+                            //{ "timestamp":"2022-08-19T17:15:07Z", "event":"CarrierJumpCancelled", "CarrierID":3704402432 }
+                            "CarrierJumpCancelled" => {
+                                let text = format!("__**JUMP CANCELED**__");
+                                self.discord.send_message(self.channel,text.as_str(),"",false).unwrap();
+                            }
+                            "CarrierDepositFuel" => {}
+                            "CarrierDockingPermission" => {}
+                            "CarrierCrewServices" => {}
+                            _ => {}
                         }
-                        journal_bus.broadcast(json);
                     }
                 }
                 line.clear();
             }
             Err(_err) => {
-                error!("Error reading journal file!");
+                println!("Error reading journal file!");
             }
         };
     }
 }
 
 fn get_journal_log_by_index(mut directory_path: String, index: usize) -> BufReader<File> {
-    //TODO Choose path dynamically
-    debug!("{}", &directory_path);
     let directory = fs::read_dir(directory_path.clone()).unwrap();
 
     let mut log_name_date_list: Vec<String> = Vec::new();
@@ -87,8 +96,6 @@ fn get_journal_log_by_index(mut directory_path: String, index: usize) -> BufRead
     directory_path.push_str("/Journal.");
     directory_path.push_str(log_name_date_list[index].to_owned().as_str());
     directory_path.push_str(".01.log");
-
-    debug!("{}", &directory_path);
 
     let journal_log_file = File::open(&directory_path).expect("file not found!");
 
