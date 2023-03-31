@@ -1,6 +1,7 @@
 # Carrier Log Discord Bot
 Carrier Log Bot for Discord for Elite Dangerous. <br>
 Give it a bot token and a channel as well as the path to the journal logs, and it will write departures from the carrier into the discord channel.
+![image](https://user-images.githubusercontent.com/60095837/229081849-910c0b9e-9d9c-4333-817e-d7164bb7ff10.png)
 
 ## Setup
 <a href=https://www.rust-lang.org/tools/install>Cargo</a> is of course required, and you need to set up your <a href=https://discord.com/developers/applications>own Discord bot</a>
