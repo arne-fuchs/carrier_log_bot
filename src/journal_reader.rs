@@ -1,11 +1,14 @@
 use std::fmt::format;
-use std::fs;
+use std::{fs, thread};
 use std::fs::{DirEntry, File};
 use std::io::{BufRead, BufReader};
 use std::ops::Add;
-use chrono::{NaiveDate, NaiveDateTime};
+use std::str::FromStr;
+use std::thread::JoinHandle;
+use std::time::Duration;
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use discord::{Connection, Discord};
-use discord::model::ChannelId;
+use discord::model::{ChannelId, UserId};
 use json::JsonValue;
 
 pub struct JournalReader{
@@ -13,7 +16,8 @@ pub struct JournalReader{
     directory_path: String,
     discord: Discord,
     connection: Connection,
-    channel: ChannelId
+    channel: ChannelId,
+    handle: Option<JoinHandle<()>>
 }
 
 pub fn initialize(directory_path: String,discord: Discord, connection: Connection, channel: ChannelId) -> JournalReader{
@@ -23,7 +27,8 @@ pub fn initialize(directory_path: String,discord: Discord, connection: Connectio
         directory_path,
         discord,
         connection,
-        channel
+        channel,
+        handle: None,
     }
 }
 
@@ -31,6 +36,12 @@ impl JournalReader {
 
     pub fn run(&mut self){
         let mut line = String::new();
+
+        if self.handle.is_some() && self.handle.as_ref().unwrap().is_finished() {
+            let admin_channel_id = self.discord.create_dm(UserId(u64::from_str(std::env::var("ADMIN_ID").unwrap().as_str()).unwrap())).unwrap().id;
+            self.discord.send_message( admin_channel_id,"Carrier arrived!","",false).unwrap();
+            self.handle = None;
+        }
 
         match self.reader.read_line(&mut line) {
             Ok(flag) => {
@@ -54,6 +65,25 @@ impl JournalReader {
                                         println!("CarrierJumpRequest: {}",line);
                                         let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody: {}\nDeparture: {}",json["SystemName"],json["Body"],json["DepartureTime"]);
                                         self.discord.send_message(self.channel,text.as_str(),"",false).unwrap();
+                                        let target_time = match DateTime::parse_from_rfc3339(json["DepartureTime"].as_str().unwrap()) {
+                                            Ok(time) => time,
+                                            Err(err) => {
+                                                eprintln!("Error parsing the time format: {}", err);
+                                                return;
+                                            }
+                                        };
+                                        let now = Utc::now();
+                                        let time_difference = target_time.signed_duration_since(now);
+                                        if time_difference.is_zero() {
+                                            println!("The time is in the past");
+                                            return;
+                                        }
+                                        let sleep_duration = time_difference.to_std().unwrap();
+                                        let handle = thread::spawn(move || {
+                                            thread::sleep(sleep_duration);
+                                        });
+
+                                        self.handle = Some(handle);
                                     }
                                     "CarrierTradeOrder" => {}
                                     "CarrierFinance" => {}
@@ -62,6 +92,7 @@ impl JournalReader {
                                         println!("CarrierJumpCancelled: {}",line);
                                         let text = format!("__**JUMP CANCELED**__");
                                         self.discord.send_message(self.channel,text.as_str(),"",false).unwrap();
+                                        self.handle = None;
                                     }
                                     "CarrierDepositFuel" => {}
                                     "CarrierDockingPermission" => {}
