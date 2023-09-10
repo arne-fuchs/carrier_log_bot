@@ -1,4 +1,3 @@
-use std::fmt::format;
 use std::{fs, thread};
 use std::fs::{DirEntry, File};
 use std::io::{BufRead, BufReader};
@@ -6,10 +5,9 @@ use std::ops::Add;
 use std::str::FromStr;
 use std::thread::JoinHandle;
 use std::time::Duration;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use discord::{Connection, Discord};
 use discord::model::{ChannelId, UserId};
-use json::JsonValue;
 
 pub struct JournalReader{
     pub reader: BufReader<File>,
@@ -39,7 +37,7 @@ impl JournalReader {
 
         if self.handle.is_some() && self.handle.as_ref().unwrap().is_finished() {
             let admin_channel_id = self.discord.create_dm(UserId(u64::from_str(std::env::var("ADMIN_ID").unwrap().as_str()).unwrap())).unwrap().id;
-            self.discord.send_message( admin_channel_id,"Carrier arrived!","",false).unwrap();
+            self.discord.send_message( admin_channel_id,"Carrier is ready to jump!","",false).unwrap();
             self.handle = None;
         }
 
@@ -78,7 +76,7 @@ impl JournalReader {
                                             println!("The time is in the past");
                                             return;
                                         }
-                                        let sleep_duration = time_difference.to_std().unwrap();
+                                        let sleep_duration = time_difference.to_std().unwrap().add(Duration::from_secs(300));
                                         let handle = thread::spawn(move || {
                                             thread::sleep(sleep_duration);
                                         });
