@@ -11,22 +11,22 @@ use discord::model::{ChannelId, UserId};
 
 pub struct JournalReader{
     pub reader: BufReader<File>,
-    directory_path: String,
     discord: Discord,
     connection: Connection,
     channel: ChannelId,
-    handle: Option<JoinHandle<()>>
+    handle: Option<JoinHandle<()>>,
+    status: String,
 }
 
 pub fn initialize(directory_path: String,discord: Discord, connection: Connection, channel: ChannelId) -> JournalReader{
     let reader = get_journal_log_by_index(directory_path.clone(),0);
     JournalReader{
         reader,
-        directory_path,
         discord,
         connection,
         channel,
         handle: None,
+        status: "financial ruin".to_string()
     }
 }
 
@@ -39,6 +39,8 @@ impl JournalReader {
             let admin_channel_id = self.discord.create_dm(UserId(u64::from_str(std::env::var("ADMIN_ID").unwrap().as_str()).unwrap())).unwrap().id;
             self.discord.send_message( admin_channel_id,"Carrier is ready to jump!","",false).unwrap();
             self.handle = None;
+            self.connection = self.discord.connect().expect("Couldn't connect.").0;
+            self.connection.set_game_name(self.status.clone());
         }
 
         match self.reader.read_line(&mut line) {
@@ -56,6 +58,7 @@ impl JournalReader {
                                     "CarrierStats" => {
                                         println!("CarrierStats: {}",line);
                                         let name = json["Name"].to_string().add(" ").add(json["Callsign"].as_str().unwrap());
+                                        self.status = name.clone();
                                         self.connection.set_game_name(name);
                                     }
                                     //{ "timestamp":"2022-11-29T21:09:30Z", "event":"CarrierJumpRequest", "CarrierID":3704402432, "SystemName":"Ngorowai", "Body":"Ngorowai A", "SystemAddress":4207155286722, "BodyID":1, "DepartureTime":"2022-11-29T21:24:40Z" }
