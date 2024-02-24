@@ -18,7 +18,7 @@ RUN cargo build --release
 FROM ubuntu:23.04
 
 RUN apt update && \
-    apt install -y libssl-dev && \
+    apt install -y libssl3 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
