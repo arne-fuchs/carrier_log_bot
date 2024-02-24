@@ -3,7 +3,7 @@ FROM rust:latest as builder
 
 # Install CMake
 RUN apt update && \
-    apt install -y cmake protobuf-compiler libprotobuf-dev&& \
+    apt install -y cmake protobuf-compiler libprotobuf-dev libssl-dev&& \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
