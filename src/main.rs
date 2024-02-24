@@ -96,7 +96,7 @@ async fn main() {
                                             }
                                             Some(payload) => {
                                                 let payload = payload.clone();
-                                             
+
                                                     match payload {
                                                         Payload::Transaction(_) => {}
                                                         Payload::Milestone(_) => {}
@@ -104,10 +104,6 @@ async fn main() {
                                                         Payload::TaggedData(tagged_data) => {
                                                             let result = json::parse(String::from_utf8(tagged_data.data().to_vec()).unwrap().as_str());
                                                             if let Ok(json) = result {
-                                                                let tag = String::from_utf8(tagged_data.tag().to_vec()).unwrap();
-                                                                if !std::env::var("TAGS").unwrap().contains(&tag) {
-                                                                    return;
-                                                                }
                                                                 //println!("{}",&json);
 
                                                                 let data = general_purpose::STANDARD.decode(json["message"].as_str().unwrap()).unwrap();
@@ -139,24 +135,24 @@ async fn main() {
                                                                             println!("CarrierJumpRequest");
                                                                             let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody: {}\nDeparture: {}",json["SystemName"],json["Body"],json["DepartureTime"]);
                                                                             discord.send_message(channel,text.as_str(),"",false).unwrap();
-                                                                            let target_time = match DateTime::parse_from_rfc3339(json["DepartureTime"].as_str().unwrap()) {
-                                                                                Ok(time) => time,
+                                                                            match DateTime::parse_from_rfc3339(json["DepartureTime"].as_str().unwrap()) {
+                                                                                Ok(target_time) => {
+                                                                                    let now = Utc::now();
+                                                                                    let time_difference = target_time.signed_duration_since(now);
+                                                                                    if time_difference.is_zero() {
+                                                                                        println!("The time is in the past");
+                                                                                    }else {
+                                                                                        let sleep_duration = time_difference.to_std().unwrap().add(Duration::from_secs(300));
+
+                                                                                        handle = Some(thread::spawn(move || {
+                                                                                            thread::sleep(sleep_duration);
+                                                                                        }));
+                                                                                    }
+                                                                                }
                                                                                 Err(err) => {
                                                                                     eprintln!("Error parsing the time format: {}", err);
-                                                                                    return;
                                                                                 }
                                                                             };
-                                                                            let now = Utc::now();
-                                                                            let time_difference = target_time.signed_duration_since(now);
-                                                                            if time_difference.is_zero() {
-                                                                                println!("The time is in the past");
-                                                                                return;
-                                                                            }
-                                                                            let sleep_duration = time_difference.to_std().unwrap().add(Duration::from_secs(300));
-
-                                                                            handle = Some(thread::spawn(move || {
-                                                                                thread::sleep(sleep_duration);
-                                                                            }));
                                                                         }
                                                                         "CarrierTradeOrder" => {}
                                                                         "CarrierFinance" => {}
