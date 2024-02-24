@@ -121,6 +121,7 @@ async fn main() {
                                                                 if sig.verify(data.as_slice()) {
                                                                     //Data is verified -> You can work with it
                                                                     let json_string = String::from_utf8(data).unwrap_or("".to_string());
+                                                                    println!("Json String: {}",&json_string);
                                                                     let json_result = json::parse(json_string.as_str());
                                                                     match json_result {
                                                                         Ok(json) => {
