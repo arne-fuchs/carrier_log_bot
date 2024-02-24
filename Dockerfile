@@ -3,7 +3,7 @@ FROM rust:latest as builder
 
 # Install CMake
 RUN apt update && \
-    apt install -y cmake protobuf-compiler libprotobuf-dev libssl-dev&& \
+    apt install -y cmake protobuf-compiler libprotobuf-dev && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -16,6 +16,10 @@ RUN cargo build --release
 
 # Create a new, smaller image without the build dependencies
 FROM ubuntu:23.04
+
+RUN apt update && \
+    apt install -y libssl-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
