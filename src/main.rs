@@ -124,22 +124,22 @@ async fn main() {
                                                                 if sig.verify(data.as_slice()) {
                                                                     println!("Signature valid!");
                                                                     //Data is verified -> You can work with it
-                                                                    let event = json["event"].as_str().unwrap_or("");
+                                                                    let event = json["message"]["event"].as_str().unwrap_or("");
                                                                     println!("Event: {}", &event);
                                                                     match event {
                                                                         //{ "timestamp":"2022-10-13T10:01:35Z", "event":"CarrierStats", "CarrierID":3704402432, "Callsign":"Q2K-BHB", "Name":"FUXBAU", "DockingAccess":"squadron", "AllowNotorious":true, "FuelLevel":617, "JumpRangeCurr":500.000000, "JumpRangeMax":500.000000, "PendingDecommission":false, "SpaceUsage":{ "TotalCapacity":25000, "Crew":6170, "Cargo":9331, "CargoSpaceReserved":1272, "ShipPacks":0, "ModulePacks":433, "FreeSpace":7794 }, "Finance":{ "CarrierBalance":1184935299, "ReserveBalance":51460958, "AvailableBalance":1029659181, "ReservePercent":4, "TaxRate_shipyard":15, "TaxRate_rearm":100, "TaxRate_outfitting":15, "TaxRate_refuel":100, "TaxRate_repair":100 }, "Crew":[ { "CrewRole":"BlackMarket", "Activated":false }, { "CrewRole":"Captain", "Activated":true, "Enabled":true, "CrewName":"Vada Cannon" }, { "CrewRole":"Refuel", "Activated":true, "Enabled":true, "CrewName":"Donna Moon" }, { "CrewRole":"Repair", "Activated":true, "Enabled":true, "CrewName":"Darnell Grant" }, { "CrewRole":"Rearm", "Activated":true, "Enabled":true, "CrewName":"Eiza York" }, { "CrewRole":"Commodities", "Activated":true, "Enabled":true, "CrewName":"Jewel King" }, { "CrewRole":"VoucherRedemption", "Activated":true, "Enabled":true, "CrewName":"Ezra Ramirez" }, { "CrewRole":"Exploration", "Activated":true, "Enabled":true, "CrewName":"Kasey Callahan" }, { "CrewRole":"Shipyard", "Activated":true, "Enabled":true, "CrewName":"Abby Cooke" }, { "CrewRole":"Outfitting", "Activated":true, "Enabled":true, "CrewName":"Jayne Callahan" }, { "CrewRole":"CarrierFuel", "Activated":true, "Enabled":true, "CrewName":"Abraham Strickland" }, { "CrewRole":"VistaGenomics", "Activated":true, "Enabled":true, "CrewName":"Melinda Reilly" }, { "CrewRole":"PioneerSupplies", "Activated":false }, { "CrewRole":"Bartender", "Activated":true, "Enabled":true, "CrewName":"Dean Barlow" } ], "ShipPacks":[  ], "ModulePacks":[ { "PackTheme":"VehicleSupport", "PackTier":1 }, { "PackTheme":"Storage", "PackTier":2 } ] }
 
                                                                         "CarrierStats" => {
                                                                             println!("CarrierStats");
-                                                                            let name = json["Name"].to_string().add(" ").add(json["Callsign"].as_str().unwrap());
+                                                                            let name = json["message"]["Name"].to_string().add(" ").add(json["message"]["Callsign"].as_str().unwrap());
                                                                             connection.set_game_name(name);
                                                                         }
                                                                         //{ "timestamp":"2022-11-29T21:09:30Z", "event":"CarrierJumpRequest", "CarrierID":3704402432, "SystemName":"Ngorowai", "Body":"Ngorowai A", "SystemAddress":4207155286722, "BodyID":1, "DepartureTime":"2022-11-29T21:24:40Z" }
                                                                         "CarrierJumpRequest" => {
                                                                             println!("CarrierJumpRequest");
-                                                                            let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody: {}\nDeparture: {}",json["SystemName"],json["Body"],json["DepartureTime"]);
+                                                                            let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody: {}\nDeparture: {}",json["message"]["SystemName"],json["message"]["Body"],json["message"]["DepartureTime"]);
                                                                             discord.send_message(channel,text.as_str(),"",false).unwrap();
-                                                                            match DateTime::parse_from_rfc3339(json["DepartureTime"].as_str().unwrap()) {
+                                                                            match DateTime::parse_from_rfc3339(json["message"]["DepartureTime"].as_str().unwrap()) {
                                                                                 Ok(target_time) => {
                                                                                     let now = Utc::now();
                                                                                     let time_difference = target_time.signed_duration_since(now);
