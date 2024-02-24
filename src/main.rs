@@ -104,7 +104,7 @@ async fn main() {
                                                             let result = json::parse(String::from_utf8(tagged_data.data().to_vec()).unwrap().as_str());
                                                             if let Ok(json) = result {
                                                                 //println!("{}",&json);
-                                                                
+
 
                                                                 let data = general_purpose::STANDARD.decode(json["message"].as_str().unwrap()).unwrap();
 
@@ -120,55 +120,62 @@ async fn main() {
                                                                 let sig = Ed25519Signature::try_from_bytes(pub_key,sig).unwrap();
                                                                 if sig.verify(data.as_slice()) {
                                                                     //Data is verified -> You can work with it
-                                                                    let event = json["message"]["event"].as_str().unwrap_or("");
-                                                                    println!("Json: {}", &json);
-                                                                    match event {
-                                                                        //{ "timestamp":"2022-10-13T10:01:35Z", "event":"CarrierStats", "CarrierID":3704402432, "Callsign":"Q2K-BHB", "Name":"FUXBAU", "DockingAccess":"squadron", "AllowNotorious":true, "FuelLevel":617, "JumpRangeCurr":500.000000, "JumpRangeMax":500.000000, "PendingDecommission":false, "SpaceUsage":{ "TotalCapacity":25000, "Crew":6170, "Cargo":9331, "CargoSpaceReserved":1272, "ShipPacks":0, "ModulePacks":433, "FreeSpace":7794 }, "Finance":{ "CarrierBalance":1184935299, "ReserveBalance":51460958, "AvailableBalance":1029659181, "ReservePercent":4, "TaxRate_shipyard":15, "TaxRate_rearm":100, "TaxRate_outfitting":15, "TaxRate_refuel":100, "TaxRate_repair":100 }, "Crew":[ { "CrewRole":"BlackMarket", "Activated":false }, { "CrewRole":"Captain", "Activated":true, "Enabled":true, "CrewName":"Vada Cannon" }, { "CrewRole":"Refuel", "Activated":true, "Enabled":true, "CrewName":"Donna Moon" }, { "CrewRole":"Repair", "Activated":true, "Enabled":true, "CrewName":"Darnell Grant" }, { "CrewRole":"Rearm", "Activated":true, "Enabled":true, "CrewName":"Eiza York" }, { "CrewRole":"Commodities", "Activated":true, "Enabled":true, "CrewName":"Jewel King" }, { "CrewRole":"VoucherRedemption", "Activated":true, "Enabled":true, "CrewName":"Ezra Ramirez" }, { "CrewRole":"Exploration", "Activated":true, "Enabled":true, "CrewName":"Kasey Callahan" }, { "CrewRole":"Shipyard", "Activated":true, "Enabled":true, "CrewName":"Abby Cooke" }, { "CrewRole":"Outfitting", "Activated":true, "Enabled":true, "CrewName":"Jayne Callahan" }, { "CrewRole":"CarrierFuel", "Activated":true, "Enabled":true, "CrewName":"Abraham Strickland" }, { "CrewRole":"VistaGenomics", "Activated":true, "Enabled":true, "CrewName":"Melinda Reilly" }, { "CrewRole":"PioneerSupplies", "Activated":false }, { "CrewRole":"Bartender", "Activated":true, "Enabled":true, "CrewName":"Dean Barlow" } ], "ShipPacks":[  ], "ModulePacks":[ { "PackTheme":"VehicleSupport", "PackTier":1 }, { "PackTheme":"Storage", "PackTier":2 } ] }
+                                                                    let json_string = String::from_utf8(data).unwrap_or("".to_string());
+                                                                    let json_result = json::parse(json_string.as_str());
+                                                                    match json_result {
+                                                                        Ok(json) => {
+                                                                            let event = json["event"].as_str().unwrap_or("");
+                                                                            match event {
+                                                                                //{ "timestamp":"2022-10-13T10:01:35Z", "event":"CarrierStats", "CarrierID":3704402432, "Callsign":"Q2K-BHB", "Name":"FUXBAU", "DockingAccess":"squadron", "AllowNotorious":true, "FuelLevel":617, "JumpRangeCurr":500.000000, "JumpRangeMax":500.000000, "PendingDecommission":false, "SpaceUsage":{ "TotalCapacity":25000, "Crew":6170, "Cargo":9331, "CargoSpaceReserved":1272, "ShipPacks":0, "ModulePacks":433, "FreeSpace":7794 }, "Finance":{ "CarrierBalance":1184935299, "ReserveBalance":51460958, "AvailableBalance":1029659181, "ReservePercent":4, "TaxRate_shipyard":15, "TaxRate_rearm":100, "TaxRate_outfitting":15, "TaxRate_refuel":100, "TaxRate_repair":100 }, "Crew":[ { "CrewRole":"BlackMarket", "Activated":false }, { "CrewRole":"Captain", "Activated":true, "Enabled":true, "CrewName":"Vada Cannon" }, { "CrewRole":"Refuel", "Activated":true, "Enabled":true, "CrewName":"Donna Moon" }, { "CrewRole":"Repair", "Activated":true, "Enabled":true, "CrewName":"Darnell Grant" }, { "CrewRole":"Rearm", "Activated":true, "Enabled":true, "CrewName":"Eiza York" }, { "CrewRole":"Commodities", "Activated":true, "Enabled":true, "CrewName":"Jewel King" }, { "CrewRole":"VoucherRedemption", "Activated":true, "Enabled":true, "CrewName":"Ezra Ramirez" }, { "CrewRole":"Exploration", "Activated":true, "Enabled":true, "CrewName":"Kasey Callahan" }, { "CrewRole":"Shipyard", "Activated":true, "Enabled":true, "CrewName":"Abby Cooke" }, { "CrewRole":"Outfitting", "Activated":true, "Enabled":true, "CrewName":"Jayne Callahan" }, { "CrewRole":"CarrierFuel", "Activated":true, "Enabled":true, "CrewName":"Abraham Strickland" }, { "CrewRole":"VistaGenomics", "Activated":true, "Enabled":true, "CrewName":"Melinda Reilly" }, { "CrewRole":"PioneerSupplies", "Activated":false }, { "CrewRole":"Bartender", "Activated":true, "Enabled":true, "CrewName":"Dean Barlow" } ], "ShipPacks":[  ], "ModulePacks":[ { "PackTheme":"VehicleSupport", "PackTier":1 }, { "PackTheme":"Storage", "PackTier":2 } ] }
 
-                                                                        "CarrierStats" => {
-                                                                            println!("CarrierStats");
-                                                                            let name = json["message"]["Name"].to_string().add(" ").add(json["message"]["Callsign"].as_str().unwrap());
-                                                                            connection.set_game_name(name);
-                                                                        }
-                                                                        //{ "timestamp":"2022-11-29T21:09:30Z", "event":"CarrierJumpRequest", "CarrierID":3704402432, "SystemName":"Ngorowai", "Body":"Ngorowai A", "SystemAddress":4207155286722, "BodyID":1, "DepartureTime":"2022-11-29T21:24:40Z" }
-                                                                        "CarrierJumpRequest" => {
-                                                                            println!("CarrierJumpRequest");
-                                                                            let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody: {}\nDeparture: {}",json["message"]["SystemName"],json["message"]["Body"],json["message"]["DepartureTime"]);
-                                                                            discord.send_message(channel,text.as_str(),"",false).unwrap();
-                                                                            match DateTime::parse_from_rfc3339(json["message"]["DepartureTime"].as_str().unwrap()) {
-                                                                                Ok(target_time) => {
-                                                                                    let now = Utc::now();
-                                                                                    let time_difference = target_time.signed_duration_since(now);
-                                                                                    if time_difference.is_zero() {
-                                                                                        println!("The time is in the past");
-                                                                                    }else {
-                                                                                        let sleep_duration = time_difference.to_std().unwrap().add(Duration::from_secs(300));
+                                                                                "CarrierStats" => {
+                                                                                    println!("CarrierStats");
+                                                                                    let name = json["Name"].to_string().add(" ").add(json["Callsign"].as_str().unwrap());
+                                                                                    connection.set_game_name(name);
+                                                                                }
+                                                                                //{ "timestamp":"2022-11-29T21:09:30Z", "event":"CarrierJumpRequest", "CarrierID":3704402432, "SystemName":"Ngorowai", "Body":"Ngorowai A", "SystemAddress":4207155286722, "BodyID":1, "DepartureTime":"2022-11-29T21:24:40Z" }
+                                                                                "CarrierJumpRequest" => {
+                                                                                    println!("CarrierJumpRequest");
+                                                                                    let text = format!("__**JUMP INITIATED**__\nDestination: {}\nBody: {}\nDeparture: {}",json["SystemName"],json["Body"],json["DepartureTime"]);
+                                                                                    discord.send_message(channel,text.as_str(),"",false).unwrap();
+                                                                                    match DateTime::parse_from_rfc3339(json["DepartureTime"].as_str().unwrap()) {
+                                                                                        Ok(target_time) => {
+                                                                                            let now = Utc::now();
+                                                                                            let time_difference = target_time.signed_duration_since(now);
+                                                                                            if time_difference.is_zero() {
+                                                                                                println!("The time is in the past");
+                                                                                            }else {
+                                                                                                let sleep_duration = time_difference.to_std().unwrap().add(Duration::from_secs(300));
 
-                                                                                        handle = Some(thread::spawn(move || {
-                                                                                            thread::sleep(sleep_duration);
-                                                                                        }));
-                                                                                    }
+                                                                                                handle = Some(thread::spawn(move || {
+                                                                                                    thread::sleep(sleep_duration);
+                                                                                                }));
+                                                                                            }
+                                                                                        }
+                                                                                        Err(err) => {
+                                                                                            eprintln!("Error parsing the time format: {}", err);
+                                                                                        }
+                                                                                    };
                                                                                 }
-                                                                                Err(err) => {
-                                                                                    eprintln!("Error parsing the time format: {}", err);
+                                                                                "CarrierTradeOrder" => {}
+                                                                                "CarrierFinance" => {}
+                                                                                //{ "timestamp":"2022-08-19T17:15:07Z", "event":"CarrierJumpCancelled", "CarrierID":3704402432 }
+                                                                                "CarrierJumpCancelled" => {
+                                                                                    println!("CarrierJumpCancelled:");
+                                                                                    let text = format!("__**JUMP CANCELED**__");
+                                                                                    discord.send_message(channel,text.as_str(),"",false).unwrap();
+                                                                                    handle = None;
                                                                                 }
-                                                                            };
+                                                                                "CarrierDepositFuel" => {}
+                                                                                "CarrierDockingPermission" => {}
+                                                                                "CarrierCrewServices" => {}
+                                                                                "Shutdown" => {}
+                                                                                _ => {}
+                                                                            }
                                                                         }
-                                                                        "CarrierTradeOrder" => {}
-                                                                        "CarrierFinance" => {}
-                                                                        //{ "timestamp":"2022-08-19T17:15:07Z", "event":"CarrierJumpCancelled", "CarrierID":3704402432 }
-                                                                        "CarrierJumpCancelled" => {
-                                                                            println!("CarrierJumpCancelled:");
-                                                                            let text = format!("__**JUMP CANCELED**__");
-                                                                            discord.send_message(channel,text.as_str(),"",false).unwrap();
-                                                                            handle = None;
-                                                                        }
-                                                                        "CarrierDepositFuel" => {}
-                                                                        "CarrierDockingPermission" => {}
-                                                                        "CarrierCrewServices" => {}
-                                                                        "Shutdown" => {}
-                                                                        _ => {}
+                                                                        Err(err) => {}
                                                                     }
+                                                                    
                                                                 } else {
                                                                     println!("Signature verification failed.");
                                                                 }
