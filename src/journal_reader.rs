@@ -100,7 +100,7 @@ impl JournalReader {
                                     "CarrierCrewServices" => {}
                                     "Shutdown" => {
                                         std::process::exit(0);
-                                    }
+                                    } 
                                     _ => {}
                                 }
                             }
