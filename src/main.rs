@@ -16,6 +16,7 @@ use rustc_hex::FromHex;
 use tonic::codegen::tokio_stream::StreamExt;
 use tonic::transport::{Channel, Uri};
 use flate2::read::ZlibDecoder;
+
 mod journal_reader;
 
 use crate::inx_handler::proto;
@@ -122,10 +123,14 @@ async fn main() {
                                                                 let sig = Ed25519Signature::try_from_bytes(pub_key,sig).unwrap();
                                                                 if sig.verify(data.as_slice()) {
                                                                     //Data is verified -> You can work with it
-                                                                 
-                                                                    let json_result = json::parse(decode_reader(data).unwrap().as_str());
+                                                                    let data_str = decode_reader(data).unwrap();
+                                                                    let json_result = json::parse(data_str.as_str());
                                                                     match json_result {
                                                                         Ok(mut json) => {
+                                                                            if !json["message"].is_null() {
+                                                                                json = json["message"].clone();
+                                                                            }
+                                                                            
                                                                             let event = json["event"].as_str().unwrap_or("");
                                                                             match event {
                                                                                 //{ "timestamp":"2022-10-13T10:01:35Z", "event":"CarrierStats", "CarrierID":3704402432, "Callsign":"Q2K-BHB", "Name":"FUXBAU", "DockingAccess":"squadron", "AllowNotorious":true, "FuelLevel":617, "JumpRangeCurr":500.000000, "JumpRangeMax":500.000000, "PendingDecommission":false, "SpaceUsage":{ "TotalCapacity":25000, "Crew":6170, "Cargo":9331, "CargoSpaceReserved":1272, "ShipPacks":0, "ModulePacks":433, "FreeSpace":7794 }, "Finance":{ "CarrierBalance":1184935299, "ReserveBalance":51460958, "AvailableBalance":1029659181, "ReservePercent":4, "TaxRate_shipyard":15, "TaxRate_rearm":100, "TaxRate_outfitting":15, "TaxRate_refuel":100, "TaxRate_repair":100 }, "Crew":[ { "CrewRole":"BlackMarket", "Activated":false }, { "CrewRole":"Captain", "Activated":true, "Enabled":true, "CrewName":"Vada Cannon" }, { "CrewRole":"Refuel", "Activated":true, "Enabled":true, "CrewName":"Donna Moon" }, { "CrewRole":"Repair", "Activated":true, "Enabled":true, "CrewName":"Darnell Grant" }, { "CrewRole":"Rearm", "Activated":true, "Enabled":true, "CrewName":"Eiza York" }, { "CrewRole":"Commodities", "Activated":true, "Enabled":true, "CrewName":"Jewel King" }, { "CrewRole":"VoucherRedemption", "Activated":true, "Enabled":true, "CrewName":"Ezra Ramirez" }, { "CrewRole":"Exploration", "Activated":true, "Enabled":true, "CrewName":"Kasey Callahan" }, { "CrewRole":"Shipyard", "Activated":true, "Enabled":true, "CrewName":"Abby Cooke" }, { "CrewRole":"Outfitting", "Activated":true, "Enabled":true, "CrewName":"Jayne Callahan" }, { "CrewRole":"CarrierFuel", "Activated":true, "Enabled":true, "CrewName":"Abraham Strickland" }, { "CrewRole":"VistaGenomics", "Activated":true, "Enabled":true, "CrewName":"Melinda Reilly" }, { "CrewRole":"PioneerSupplies", "Activated":false }, { "CrewRole":"Bartender", "Activated":true, "Enabled":true, "CrewName":"Dean Barlow" } ], "ShipPacks":[  ], "ModulePacks":[ { "PackTheme":"VehicleSupport", "PackTier":1 }, { "PackTheme":"Storage", "PackTier":2 } ] }
@@ -175,7 +180,7 @@ async fn main() {
                                                                                 _ => {}
                                                                             }
                                                                         }
-                                                                        Err(err) => {}
+                                                                        Err(err) => {println!("Couldn't parse to json: {}\n{}", err, data_str)}
                                                                     }
                                                                     
                                                                 } else {
