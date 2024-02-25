@@ -1,5 +1,6 @@
 use std::ops::Add;
 use std::{io, process, thread};
+use std::io::Read;
 use std::thread::JoinHandle;
 use std::time::Duration;
 use base64::Engine;
@@ -14,6 +15,7 @@ use iota_sdk::types::block::signature::Ed25519Signature;
 use rustc_hex::FromHex;
 use tonic::codegen::tokio_stream::StreamExt;
 use tonic::transport::{Channel, Uri};
+use flate2::read::ZlibDecoder;
 mod journal_reader;
 
 use crate::inx_handler::proto;
